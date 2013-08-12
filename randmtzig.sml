@@ -60,6 +60,7 @@ sig
     val randExpArray: int * state * zt -> Real64Array.array
     val randBinomArray: int * real * int * state -> Real64Array.array
     val randPoissonArray: real * int * state * zt -> Real64Array.array
+    val randNPoissonArray: (real -> real) * real * Real64Array.array * state * zt -> Real64Array.array
 
 end
 
@@ -197,6 +198,37 @@ struct
             randmtzig_fill_drandp (L,n,v,st,ki,ke,wi,fi,we,fe);
             v
         end
+
+(* Implementation of non-homogeneous Poisson process by thinning.
+
+   Lewis, P. A. W.; Shedler, G. S. (1979). 
+   "Simulation of nonhomogeneous poisson processes by thinning". 
+   Naval Research Logistics Quarterly 26 (3): 403. 
+*) 
+
+(*
+  For a given intensity function L (t):
+  1. Define an upper bound Lmax for the intensity function L(t).
+  2. Simulate a homogeneous Poisson process with intensity Lmax.
+  3. "Thin" the simulated process as follows,
+     (a) Compute p = L(t)/Lmax for each point (t) of the homogeneous Poisson process.
+     (b) Generate a sample u from the uniform distribution on (0, 1).
+     (c) Retain the locations for which u <= p.
+*)
+
+    fun randNPoissonArray (L, Lmax, t, st, zt) =
+    let
+        val sub = Real64Array.sub
+        val n   = Real64Array.length t
+        val hp  = randPoissonArray (Lmax, n, st, zt)
+        val p   = Real64Array.tabulate (n, fn (i) => Real./(L (sub (t, i)), Lmax))
+        val u   = randUniformArray (n, st)
+    in
+        Real64Array.fromList
+            (Real64Array.foldri (fn (i,t,ax) => if Real.<= (sub (u,i), sub (p,i)) then t::ax else ax)
+                                [] t)
+    end
+
 
                                                    
 
