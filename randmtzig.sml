@@ -267,6 +267,15 @@ fun poissonRandomArray seed L size =
     end
 
 
+fun poissonNRandomArray seed L Lmax t =
+    let 
+        val st   = RandomMTZig.fromInt seed
+        val zt   = RandomMTZig.ztnew()
+    in 
+        RandomMTZig.randNPoissonArray (L, Lmax, t, st, zt) 
+    end
+
+
 
 fun realArrayWrite file x =
     (Real64Array.app (fn x => (TextIO.output(file, " " ^ (Real.toString x)))) x)
@@ -282,4 +291,12 @@ val _ = (let open RandomMTZig
               realArrayWrite (TextIO.stdOut) pv; TextIO.output (TextIO.stdOut,"\n"))
 	 end)
 *)
-
+(*
+val _ = (let open RandomMTZig
+             fun L (x) = if Real.< (x,1000.0) then 100.0 else 200.0
+             val t = Real64Array.tabulate (2000, fn (i) => Real.* (1.0, Real.fromInt i))
+	     val pv = poissonNRandomArray 17 L 200.0 t
+	 in
+             realArrayWrite (TextIO.stdOut) pv; TextIO.output (TextIO.stdOut,"\n")
+	 end)
+*)
